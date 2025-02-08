@@ -13,25 +13,21 @@
 **How to Run It**
 
 1. Clone this repo:
-git clone [https://github.com/your-username/websocket-position.git](https://github.com/evaSUry/websocket_position.git)
+  git clone [https://github.com/your-username/websocket-position.git](https://github.com/evaSUry/websocket_position.git)
+  cd websocket-position
 
-2. cd websocket-position
+2. Install dependencies:
+  cd client && npm install
+  cd ../server && npm install
 
-3. Install dependencies:
-  cd client
-  npm install
-  cd ../server
-  npm install
+3. Start the backend:
+  node index.js
 
-4. Start the backend:
-node index.js
-
-5. Start the frontend:
-  from a seperate terminal, navigate to the project
+4. Start the frontend (from a seperate terminal window): 
   cd client
   npm start
 
-7. Open http://localhost:3000 in your browser.
+5. Open http://localhost:3000 in your browser.
 
 **Tech Stack**
 
