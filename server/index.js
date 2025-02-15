@@ -11,77 +11,22 @@ const io = new Server(server, {
   cors: { origin: "http://localhost:3000" },
 });
 
-// Initialize positions to ensure Eva & Mike always start on the board
-// Store data in two objects for O(1) lookups
-let positions = { 1: "Mike", 2: "Eva" }; // Position → Name
-let nameToPosition = { Mike: 1, Eva: 2 }; // Name → Position
-
-// function to find a random empty position
-const findRandomEmptyPosition = () => {
-  const emptyPositions = [];
-  for (let i = 1; i <= 10; i++) {
-    if (!positions[i]) emptyPositions.push(i);
-  }
-  if (emptyPositions.length === 0) return null; // No empty spots available
-  return emptyPositions[Math.floor(Math.random() * emptyPositions.length)]; // Pick a random available spot
+// Function to generate a timestamped position update
+const generateMessage = () => {
+  const timestamp = new Date().toLocaleString("en-US", { hour12: true }); // Format: "MM/DD/YYYY HH:MM:SS"
+  const randomPosition = Math.floor(Math.random() * 10) + 1; // 1-10
+  return { ts: timestamp, pos: randomPosition };
 };
+
+// Broadcast a message every 10 seconds
+setInterval(() => {
+  const message = generateMessage();
+  io.emit("position_update", message);
+  console.log("Sent:", message);
+}, 10000);
 
 io.on("connection", (socket) => {
   console.log("A user connected");
-
-  // Send the initial positions when a client connects
-  socket.emit("update_positions", positions);
-
-
-  socket.on("update_position", (data) => {
-    console.log("Received update:", data);
-
-    // Extract the name and new position from the update
-    const [movingName, newPosition] = Object.entries(data)[0];
-
-    if (typeof newPosition !== "number" || newPosition < 1 || newPosition > 10) {
-      console.error("Invalid position received:", data);
-      return;
-    }
-    // prevent redundant moves, checking if old position still exists
-    if (nameToPosition[movingName] === newPosition) {
-      console.log(`${movingName} is already at position ${newPosition}. Ignoring update.`);
-      return;
-    }
-    // Check if the new position is already occupied
-    if (positions[newPosition]) {
-      const currentOccupant = positions[newPosition];
-
-      if (currentOccupant !== movingName) {
-        console.log(`${movingName} wants to move to ${newPosition}, but ${currentOccupant} is already there.`);
-
-        // Find a random empty position for the displaced player
-        const newRandomSpot = findRandomEmptyPosition();
-
-        if (newRandomSpot) {
-          console.log(`Bumping ${currentOccupant} to random position ${newRandomSpot}`);
-          positions[newRandomSpot] = currentOccupant;
-          nameToPosition[currentOccupant] = newRandomSpot;
-        } else {
-          console.log(`No empty positions available. ${currentOccupant} remains in place.`);
-        }
-      }
-    }
-
-    // Remove the old position of the moving player
-    if (nameToPosition[movingName] !== undefined) {
-      delete positions[nameToPosition[movingName]];
-    }
-
-    // Assign the moving player to the new position
-    positions[newPosition] = movingName;
-    nameToPosition[movingName] = newPosition;
-
-    console.log("Updated positions:", positions);
-
-    // Send the updated positions to all clients
-    io.emit("update_positions", { ...positions });
-  });
 
   socket.on("disconnect", () => {
     console.log(`User disconnected | Active connections: ${io.engine.clientsCount}`); 
